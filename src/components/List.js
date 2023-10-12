@@ -1,45 +1,41 @@
 import React, { useEffect, useState } from "react";
 import { fetchPhotos } from "../api";
 import { ListElement } from "./ListElement";
-import { Grid } from "@chakra-ui/react"
+import { Grid, Text } from "@chakra-ui/react"
 import { gridConfig } from "../config";
 import { useDispatch, useSelector } from "react-redux";
-import { addData } from "../reducers/app";
+import { addData, updatePages } from "../reducers/app";
 
 const List = () => {
     // redux
-    const store = useSelector(state => state.app.list);
+    const listStore = useSelector(state => state.app.list);
+    const pageStore = useSelector(state => state.app.page);
     const dispatch = useDispatch();
-    const [page, setPage] = useState(1);
     const [lockLoad, setLockLoad] = useState(false);
-    // set initial state
+
     const getPhotos = async () => {
+        // lock push for next data if current ist imported
         setLockLoad(true);
-        console.log("current page", page);
+
         const data = await fetchPhotos({
             perPage: 30,
-            page: page
+            page: pageStore
         });
         const images = data.images;
 
-        setPage(prev => prev + 1);
-        // push to reducer
-        console.log("page", page);
+        // update reducer
+        dispatch(updatePages(pageStore + 1));
         dispatch(addData(images));
-        setLockLoad(false);
 
+        // free loading next data
+        setLockLoad(false);
     }
-    useEffect(() => {
-        if (page === 1) {
-            getPhotos();
-        }
-    }, [page])
 
     const handleScroll = () => {
         const position = window.pageYOffset;
         const windowHeight = document.body.scrollHeight - window.innerHeight;
-
         const getNewDataPoint = windowHeight - 200;
+
         if(getNewDataPoint < position){
             if(!lockLoad){
                 getPhotos();
@@ -48,13 +44,18 @@ const List = () => {
     };
 
     useEffect(() => {
-        window.addEventListener('scroll', handleScroll, { passive: true });
-    
-        return () => {
-            window.removeEventListener('scroll', handleScroll);
-        };
-    }, []);
+        if (pageStore === 1) {
+            getPhotos();
+        }else{
+            window.addEventListener('scroll', handleScroll, { passive: true });
+            return () => {
+                window.removeEventListener('scroll', handleScroll);
+            };
+        }
+    }, [pageStore])
 
+    if(listStore.length == 0 ) return <Text>Loading data</Text>
+    
     return <Grid
         style={{
             minHeight: "90vh",
@@ -67,7 +68,7 @@ const List = () => {
         columnGap={gridConfig.gridGap}
     >
         {
-            store.map(photo => {
+            listStore.map(photo => {
                 return <ListElement key={photo.slug} photo={photo} />
             })
         }
