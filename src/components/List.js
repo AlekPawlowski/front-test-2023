@@ -25,7 +25,21 @@ const List = () => {
 
         // update reducer
         dispatch(updatePages(pageStore + 1));
-        dispatch(addData(images));
+        dispatch(
+            // send only required data to save memory
+            addData(
+                [...images].map(image => {
+                    const photoUrl = image.links.download;
+                    const name = image.user.name;
+                    const slug = image.slug
+                    return {
+                        imageAdress: photoUrl,
+                        authorName: name,
+                        slug: slug
+                    }
+                })
+            )
+        );
 
         // free loading next data
         setLockLoad(false);
@@ -36,8 +50,8 @@ const List = () => {
         const windowHeight = document.body.scrollHeight - window.innerHeight;
         const getNewDataPoint = windowHeight - 200;
 
-        if(getNewDataPoint < position){
-            if(!lockLoad){
+        if (getNewDataPoint < position) {
+            if (!lockLoad) {
                 getPhotos();
             }
         }
@@ -46,7 +60,7 @@ const List = () => {
     useEffect(() => {
         if (pageStore === 1) {
             getPhotos();
-        }else{
+        } else {
             window.addEventListener('scroll', handleScroll, { passive: true });
             return () => {
                 window.removeEventListener('scroll', handleScroll);
@@ -54,8 +68,8 @@ const List = () => {
         }
     }, [pageStore])
 
-    if(listStore.length == 0 ) return <Text>Loading data</Text>
-    
+    if (listStore.length == 0) return <Text>Loading data</Text>
+
     return <Grid
         style={{
             minHeight: "90vh",

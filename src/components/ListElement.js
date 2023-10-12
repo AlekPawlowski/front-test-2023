@@ -2,8 +2,8 @@ import { Box, GridItem, Image, Text } from "@chakra-ui/react"
 import { gridConfig } from "../config";
 
 export const ListElement = ({photo}) => {
-    const photoUrl = photo.links.download;
-    const name = photo.user.name;
+    const photoUrl = photo.imageAdress;
+    const name = photo.authorName;
     const slug = photo.slug
     return <GridItem w='100%' h={`${gridConfig.gridItemHeight}`} overflow='hidden'>
         <Image 
